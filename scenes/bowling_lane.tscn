@@ -1,0 +1,151 @@
+; Godot 4 scene file — bowling_lane.tscn
+;
+; Node tree (all dimensions in metres):
+;
+;   BowlingLane  (Node3D)
+;     LaneFloor     (StaticBody3D)        lane surface  18 × 1.05 m
+;       LaneMesh    (MeshInstance3D)
+;       LaneCollision (CollisionShape3D)
+;     LeftGutter    (StaticBody3D)        0.25 m wide, slightly recessed
+;       LeftGutterMesh    (MeshInstance3D)
+;       LeftGutterCollision (CollisionShape3D)
+;     RightGutter   (StaticBody3D)
+;       RightGutterMesh   (MeshInstance3D)
+;       RightGutterCollision (CollisionShape3D)
+;     BackWall      (StaticBody3D)        stops the ball behind the pins
+;       BackWallMesh      (MeshInstance3D)
+;       BackWallCollision (CollisionShape3D)
+;     FoulLine      (MeshInstance3D)      visual only — red stripe at z = 0
+;     LeftWall      (StaticBody3D)        invisible side barrier
+;       LeftWallCollision  (CollisionShape3D)
+;     RightWall     (StaticBody3D)        invisible side barrier
+;       RightWallCollision (CollisionShape3D)
+;
+; Coordinate convention (matches main.tscn):
+;   Ball travels in +Z direction.
+;   Lane runs from z=0 (foul line) to z=18 (back wall).
+;   Lane centred on X=0.
+
+[gd_scene load_steps=16 format=3 uid="uid://blane001"]
+
+; ── Lane surface (18 m × 1.05 m × 0.05 m thick) ─────────────────────────────
+[sub_resource type="BoxMesh" id="BoxMesh_lane"]
+size = Vector3(1.05, 0.05, 18.0)
+
+[sub_resource type="StandardMaterial3D" id="Mat_lane"]
+albedo_color = Color(0.85, 0.72, 0.45, 1)
+roughness = 0.2
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_lane"]
+size = Vector3(1.05, 0.05, 18.0)
+
+; ── Left gutter (0.25 m wide, 0.02 m lower than lane surface) ────────────────
+[sub_resource type="BoxMesh" id="BoxMesh_lgutter"]
+size = Vector3(0.25, 0.03, 18.0)
+
+[sub_resource type="StandardMaterial3D" id="Mat_gutter"]
+albedo_color = Color(0.35, 0.35, 0.35, 1)
+roughness = 0.6
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_lgutter"]
+size = Vector3(0.25, 0.03, 18.0)
+
+; ── Right gutter ─────────────────────────────────────────────────────────────
+[sub_resource type="BoxMesh" id="BoxMesh_rgutter"]
+size = Vector3(0.25, 0.03, 18.0)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_rgutter"]
+size = Vector3(0.25, 0.03, 18.0)
+
+; ── Back wall (1.6 m wide, 0.5 m tall, 0.1 m thick) ─────────────────────────
+[sub_resource type="BoxMesh" id="BoxMesh_backwall"]
+size = Vector3(1.6, 0.5, 0.1)
+
+[sub_resource type="StandardMaterial3D" id="Mat_backwall"]
+albedo_color = Color(0.2, 0.2, 0.2, 1)
+roughness = 0.8
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_backwall"]
+size = Vector3(1.6, 0.5, 0.1)
+
+; ── Foul line (1.05 m wide, thin slab — visual only) ─────────────────────────
+[sub_resource type="BoxMesh" id="BoxMesh_foul"]
+size = Vector3(1.05, 0.001, 0.05)
+
+[sub_resource type="StandardMaterial3D" id="Mat_foul"]
+albedo_color = Color(0.8, 0.1, 0.1, 1)
+roughness = 0.5
+
+; ── Invisible side walls (keep ball on lane) ─────────────────────────────────
+[sub_resource type="BoxShape3D" id="BoxShape3D_lwall"]
+size = Vector3(0.05, 0.3, 18.0)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_rwall"]
+size = Vector3(0.05, 0.3, 18.0)
+
+; ── Node tree ─────────────────────────────────────────────────────────────────
+[node name="BowlingLane" type="Node3D"]
+
+; Lane floor — centred at x=0, y=−0.025 (so top surface is at y=0), z=9
+[node name="LaneFloor" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.025, 9)
+
+[node name="LaneMesh" type="MeshInstance3D" parent="LaneFloor"]
+mesh = SubResource("BoxMesh_lane")
+surface_material_override/0 = SubResource("Mat_lane")
+
+[node name="LaneCollision" type="CollisionShape3D" parent="LaneFloor"]
+shape = SubResource("BoxShape3D_lane")
+
+; Left gutter — centre at x = −(0.525 + 0.125) = −0.65, y = −0.035
+[node name="LeftGutter" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.65, -0.035, 9)
+
+[node name="LeftGutterMesh" type="MeshInstance3D" parent="LeftGutter"]
+mesh = SubResource("BoxMesh_lgutter")
+surface_material_override/0 = SubResource("Mat_gutter")
+
+[node name="LeftGutterCollision" type="CollisionShape3D" parent="LeftGutter"]
+shape = SubResource("BoxShape3D_lgutter")
+
+; Right gutter — centre at x = +0.65
+[node name="RightGutter" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.65, -0.035, 9)
+
+[node name="RightGutterMesh" type="MeshInstance3D" parent="RightGutter"]
+mesh = SubResource("BoxMesh_rgutter")
+surface_material_override/0 = SubResource("Mat_gutter")
+
+[node name="RightGutterCollision" type="CollisionShape3D" parent="RightGutter"]
+shape = SubResource("BoxShape3D_rgutter")
+
+; Back wall — z = 18.55 (just past lane end)
+[node name="BackWall" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2, 18.55)
+
+[node name="BackWallMesh" type="MeshInstance3D" parent="BackWall"]
+mesh = SubResource("BoxMesh_backwall")
+surface_material_override/0 = SubResource("Mat_backwall")
+
+[node name="BackWallCollision" type="CollisionShape3D" parent="BackWall"]
+shape = SubResource("BoxShape3D_backwall")
+
+; Foul line visual — sits on top of the lane surface at z = 0
+[node name="FoulLine" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.001, 0)
+mesh = SubResource("BoxMesh_foul")
+surface_material_override/0 = SubResource("Mat_foul")
+
+; Invisible left barrier at x = −0.65 (inner edge of left gutter)
+[node name="LeftWall" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.65, 0.15, 9)
+
+[node name="LeftWallCollision" type="CollisionShape3D" parent="LeftWall"]
+shape = SubResource("BoxShape3D_lwall")
+
+; Invisible right barrier at x = +0.65
+[node name="RightWall" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.65, 0.15, 9)
+
+[node name="RightWallCollision" type="CollisionShape3D" parent="RightWall"]
+shape = SubResource("BoxShape3D_rwall")

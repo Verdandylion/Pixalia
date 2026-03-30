@@ -1,0 +1,157 @@
+; Godot 4 scene file — main.tscn
+;
+; Full node tree:
+;
+;   Main            (Node3D)               ← game_manager.gd
+;     WorldEnvironment (WorldEnvironment)  ← sky / ambient light
+;     SunLight         (DirectionalLight3D)← primary shadow-casting light
+;     IsometricCamera  (Camera3D)          ← isometric_camera.gd
+;     BowlingLane      (BowlingLane scene) ← instanced bowling_lane.tscn
+;     BallSpawnPoint   (Marker3D)          ← ball's starting position
+;     BowlingBall      (BowlingBall scene) ← instanced bowling_ball.tscn
+;     PinManager       (Node3D)            ← pin_manager.gd
+;     HUD              (CanvasLayer)
+;       HUDControl     (Control)           ← ui_manager.gd
+;         TopInfo      (VBoxContainer)     ← score / frame labels
+;           FrameLabel  (Label)
+;           ScoreLabel  (Label)
+;           TurnLabel   (Label)
+;           MessageLabel(Label)
+;         BottomControls (VBoxContainer)   ← control hints
+;           AimLabel    (Label)
+;           PowerLabel  (Label)
+
+[gd_scene load_steps=11 format=3 uid="uid://bmain001"]
+
+; ── External resources ────────────────────────────────────────────────────────
+[ext_resource type="Script"      path="res://scripts/game_manager.gd"    id="1_gm"]
+[ext_resource type="Script"      path="res://scripts/isometric_camera.gd" id="2_cam"]
+[ext_resource type="PackedScene" path="res://scenes/bowling_lane.tscn"   id="3_lane"]
+[ext_resource type="PackedScene" path="res://scenes/bowling_ball.tscn"   id="4_ball"]
+[ext_resource type="Script"      path="res://scripts/pin_manager.gd"     id="5_pm"]
+[ext_resource type="PackedScene" path="res://scenes/bowling_pin.tscn"    id="6_pin"]
+[ext_resource type="Script"      path="res://scripts/ui_manager.gd"      id="7_ui"]
+
+; ── World environment ─────────────────────────────────────────────────────────
+[sub_resource type="ProceduralSkyMaterial" id="SkyMat_main"]
+sky_top_color    = Color(0.20, 0.40, 0.70, 1)
+sky_horizon_color = Color(0.60, 0.75, 0.90, 1)
+ground_bottom_color = Color(0.30, 0.25, 0.20, 1)
+ground_horizon_color = Color(0.50, 0.50, 0.50, 1)
+
+[sub_resource type="Sky" id="Sky_main"]
+sky_material = SubResource("SkyMat_main")
+
+[sub_resource type="Environment" id="Env_main"]
+background_mode = 2
+sky = SubResource("Sky_main")
+ambient_light_source = 3
+ambient_light_color = Color(0.6, 0.6, 0.6, 1)
+ambient_light_energy = 0.6
+
+; ── Node tree ─────────────────────────────────────────────────────────────────
+[node name="Main" type="Node3D"]
+script = ExtResource("1_gm")
+
+; World environment — provides sky colour and ambient light
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Env_main")
+
+; Directional light — angled to cast soft shadows across the lane
+; rotation: pitch −50°, yaw −30° (good for an isometric view)
+[node name="SunLight" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866, -0.353, 0.354, 0, 0.707, 0.707, -0.5, -0.612, 0.613, 0, 8, 0)
+light_energy = 1.2
+shadow_enabled = true
+
+; Isometric camera — positioned at z=−6, y=10, looking toward z=7
+; The script repositions it dynamically so the initial transform here is just a hint
+[node name="IsometricCamera" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.819, 0.574, 0, -0.574, 0.819, 0, 10, -6)
+current = true
+script = ExtResource("2_cam")
+
+; Bowling lane — instanced sub-scene, positioned so lane top surface is at y=0
+[node name="BowlingLane" parent="." instance=ExtResource("3_lane")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+
+; Ball spawn point — just past the foul line, ball radius above the floor
+[node name="BallSpawnPoint" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.108, 0.5)
+
+; Bowling ball — instanced; starts at BallSpawnPoint (script uses Marker3D)
+[node name="BowlingBall" parent="." instance=ExtResource("4_ball")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.108, 0.5)
+
+; Pin manager — spawns all 10 pins at the correct positions
+; y=0 so pin roots sit on the lane surface (mesh offset +0.19 puts base at y=0)
+[node name="PinManager" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+script = ExtResource("5_pm")
+pin_scene = ExtResource("6_pin")
+
+; ── HUD ── CanvasLayer keeps UI on top of 3-D world ──────────────────────────
+[node name="HUD" type="CanvasLayer" parent="."]
+
+[node name="HUDControl" type="Control" parent="HUD"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("7_ui")
+
+; ── Top information panel (score, frame, turn, messages) ─────────────────────
+[node name="TopInfo" type="VBoxContainer" parent="HUD/HUDControl"]
+layout_mode = 1
+anchors_preset = 1
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_left = 10.0
+offset_top = 10.0
+offset_right = 400.0
+offset_bottom = 180.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="FrameLabel" type="Label" parent="HUD/HUDControl/TopInfo"]
+text = "Frame: 1  Roll: 1"
+theme_override_font_sizes/font_size = 18
+
+[node name="ScoreLabel" type="Label" parent="HUD/HUDControl/TopInfo"]
+text = "Score: 0"
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(1, 0.9, 0.2, 1)
+
+[node name="TurnLabel" type="Label" parent="HUD/HUDControl/TopInfo"]
+text = "Your turn! Aim and throw."
+theme_override_font_sizes/font_size = 16
+
+[node name="MessageLabel" type="Label" parent="HUD/HUDControl/TopInfo"]
+text = ""
+theme_override_font_sizes/font_size = 28
+theme_override_colors/font_color = Color(1, 0.4, 0.1, 1)
+
+; ── Bottom control hints ──────────────────────────────────────────────────────
+[node name="BottomControls" type="VBoxContainer" parent="HUD/HUDControl"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left  = 0.0
+anchor_top   = 1.0
+anchor_right = 0.0
+anchor_bottom = 1.0
+offset_left   = 10.0
+offset_top    = -70.0
+offset_right  = 600.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical   = 0
+
+[node name="AimLabel" type="Label" parent="HUD/HUDControl/BottomControls"]
+text = "A/D — Aim   W/S — Power   SPACE — Throw"
+theme_override_font_sizes/font_size = 16
+
+[node name="PowerLabel" type="Label" parent="HUD/HUDControl/BottomControls"]
+text = ""
+theme_override_font_sizes/font_size = 16
