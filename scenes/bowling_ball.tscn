@@ -1,0 +1,39 @@
+; Godot 4 scene file — bowling_ball.tscn
+; Node tree:
+;   BowlingBall (RigidBody3D)         ← bowling_ball.gd
+;     BallMesh  (MeshInstance3D)      ← sphere, radius 0.108 m (official size)
+;     BallCollision (CollisionShape3D)← sphere shape matches mesh
+;
+; The ball starts frozen (freeze=true in script) until the player throws it.
+; Mass / friction / bounce are set by the script via PhysicsMaterial.
+
+[gd_scene load_steps=5 format=3 uid="uid://bball001"]
+
+[ext_resource type="Script" path="res://scripts/bowling_ball.gd" id="1_ball01"]
+
+; ── Ball mesh ─────────────────────────────────────────────────────────────────
+[sub_resource type="SphereMesh" id="SphereMesh_ball01"]
+radius = 0.108
+height = 0.216
+
+; ── Ball material — dark blue / classic bowling ball look ────────────────────
+[sub_resource type="StandardMaterial3D" id="Mat_ball01"]
+albedo_color = Color(0.10, 0.10, 0.50, 1)
+roughness = 0.3
+metallic = 0.1
+
+; ── Collision shape ───────────────────────────────────────────────────────────
+[sub_resource type="SphereShape3D" id="SphereShape3D_ball01"]
+radius = 0.108
+
+; ── Node tree ─────────────────────────────────────────────────────────────────
+[node name="BowlingBall" type="RigidBody3D"]
+mass = 6.0
+script = ExtResource("1_ball01")
+
+[node name="BallMesh" type="MeshInstance3D" parent="."]
+mesh = SubResource("SphereMesh_ball01")
+surface_material_override/0 = SubResource("Mat_ball01")
+
+[node name="BallCollision" type="CollisionShape3D" parent="."]
+shape = SubResource("SphereShape3D_ball01")

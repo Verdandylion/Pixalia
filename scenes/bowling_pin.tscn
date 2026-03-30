@@ -1,0 +1,45 @@
+; Godot 4 scene file — bowling_pin.tscn
+; Node tree:
+;   BowlingPin (RigidBody3D)         ← bowling_pin.gd
+;     PinMesh  (MeshInstance3D)      ← cylinder approximating a pin shape
+;     PinCollision (CollisionShape3D)← matches mesh
+;
+; HOW TO READ dimensions
+;   A real bowling pin is ~38 cm tall, ~12 cm wide at the widest.
+;   We use a simple tapered cylinder: height=0.38, radius=0.06 m.
+;   The mesh origin is at the bottom of the pin so it sits flush on the lane.
+
+[gd_scene load_steps=5 format=3 uid="uid://bpin001"]
+
+[ext_resource type="Script" path="res://scripts/bowling_pin.gd" id="1_pin01"]
+
+; ── Pin mesh ──────────────────────────────────────────────────────────────────
+[sub_resource type="CylinderMesh" id="CylinderMesh_pin01"]
+top_radius = 0.035
+bottom_radius = 0.06
+height = 0.38
+
+; ── Pin material — bright white so it's easy to see ─────────────────────────
+[sub_resource type="StandardMaterial3D" id="Mat_pin01"]
+albedo_color = Color(0.95, 0.95, 0.95, 1)
+roughness = 0.4
+
+; ── Collision shape matches the cylinder ─────────────────────────────────────
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_pin01"]
+radius = 0.06
+height = 0.38
+
+; ── Node tree ─────────────────────────────────────────────────────────────────
+[node name="BowlingPin" type="RigidBody3D"]
+mass = 1.5
+script = ExtResource("1_pin01")
+
+[node name="PinMesh" type="MeshInstance3D" parent="."]
+; Offset upward by half height so the bottom of the pin is at y=0
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.19, 0)
+mesh = SubResource("CylinderMesh_pin01")
+surface_material_override/0 = SubResource("Mat_pin01")
+
+[node name="PinCollision" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.19, 0)
+shape = SubResource("CylinderShape3D_pin01")
