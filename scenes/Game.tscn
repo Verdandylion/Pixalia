@@ -1,0 +1,204 @@
+[gd_scene load_steps=42 format=3 uid="uid://cgame001"]
+
+[ext_resource type="Script" path="res://scripts/game.gd" id="1_game"]
+[ext_resource type="Script" path="res://scripts/camera_rig.gd" id="2_camrig"]
+[ext_resource type="Script" path="res://scripts/lane.gd" id="3_lane"]
+[ext_resource type="Script" path="res://scripts/bowling_ball.gd" id="4_ball"]
+[ext_resource type="Script" path="res://scripts/pin_manager.gd" id="5_pinmgr"]
+[ext_resource type="Script" path="res://scripts/hud.gd" id="6_hud"]
+[ext_resource type="Script" path="res://scripts/power_meter.gd" id="7_power"]
+
+; ── Materials ──────────────────────────────────────────────────────────────
+[sub_resource type="StandardMaterial3D" id="mat_lane"]
+albedo_color = Color(0.831, 0.655, 0.416, 1)
+
+[sub_resource type="StandardMaterial3D" id="mat_gutter"]
+albedo_color = Color(0.2, 0.2, 0.2, 1)
+
+[sub_resource type="StandardMaterial3D" id="mat_foul"]
+albedo_color = Color(1, 0, 0, 1)
+
+[sub_resource type="StandardMaterial3D" id="mat_wall"]
+albedo_color = Color(0.243, 0.153, 0.137, 1)
+
+[sub_resource type="StandardMaterial3D" id="mat_ball"]
+albedo_color = Color(0.102, 0.137, 0.494, 1)
+
+; ── Meshes ─────────────────────────────────────────────────────────────────
+[sub_resource type="BoxMesh" id="mesh_lane_floor"]
+size = Vector3(1.06, 0.1, 18.3)
+
+[sub_resource type="BoxMesh" id="mesh_gutter_left"]
+size = Vector3(0.15, 0.15, 18.3)
+
+[sub_resource type="BoxMesh" id="mesh_gutter_right"]
+size = Vector3(0.15, 0.15, 18.3)
+
+[sub_resource type="BoxMesh" id="mesh_foul_line"]
+size = Vector3(1.06, 0.02, 0.02)
+
+[sub_resource type="BoxMesh" id="mesh_back_wall"]
+size = Vector3(1.5, 1.0, 0.2)
+
+[sub_resource type="SphereMesh" id="mesh_ball"]
+radius = 0.11
+height = 0.22
+
+; ── Collision Shapes ───────────────────────────────────────────────────────
+[sub_resource type="BoxShape3D" id="shape_lane_floor"]
+size = Vector3(1.06, 0.1, 18.3)
+
+[sub_resource type="BoxShape3D" id="shape_gutter_left"]
+size = Vector3(0.15, 0.15, 18.3)
+
+[sub_resource type="BoxShape3D" id="shape_gutter_right"]
+size = Vector3(0.15, 0.15, 18.3)
+
+[sub_resource type="BoxShape3D" id="shape_back_wall"]
+size = Vector3(1.5, 1.0, 0.2)
+
+[sub_resource type="SphereShape3D" id="shape_ball"]
+radius = 0.11
+
+; ── WorldEnvironment ──────────────────────────────────────────────────────
+[sub_resource type="Sky" id="sky_default"]
+
+[sub_resource type="Environment" id="env_default"]
+background_mode = 2
+sky = SubResource("sky_default")
+ambient_light_source = 2
+ambient_light_color = Color(0.9, 0.9, 1.0, 1)
+ambient_light_energy = 0.5
+
+; ── Node Tree ──────────────────────────────────────────────────────────────
+[node name="Game" type="Node3D"]
+script = ExtResource("1_game")
+
+[node name="CameraRig" type="Node3D" parent="."]
+script = ExtResource("2_camrig")
+
+[node name="IsometricCamera" type="Camera3D" parent="CameraRig"]
+transform = Transform3D(0.707, -0.408, 0.577, 0, 0.816, 0.577, -0.707, -0.408, 0.577, 10, 10, 10)
+projection = 1
+size = 12.0
+current = true
+
+[node name="Environment" type="Node3D" parent="."]
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="Environment"]
+transform = Transform3D(0.866, -0.354, 0.354, 0, 0.707, 0.707, -0.5, -0.612, 0.612, 0, 8, 0)
+shadow_enabled = true
+light_energy = 1.2
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="Environment"]
+environment = SubResource("env_default")
+
+[node name="Lane" type="StaticBody3D" parent="."]
+script = ExtResource("3_lane")
+
+[node name="LaneFloor" type="MeshInstance3D" parent="Lane"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("mesh_lane_floor")
+material_override = SubResource("mat_lane")
+
+[node name="LaneFloorCol" type="CollisionShape3D" parent="Lane"]
+shape = SubResource("shape_lane_floor")
+
+[node name="LeftGutter" type="MeshInstance3D" parent="Lane"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.605, 0.025, 0)
+mesh = SubResource("mesh_gutter_left")
+material_override = SubResource("mat_gutter")
+
+[node name="LeftGutterCol" type="CollisionShape3D" parent="Lane"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.605, 0.025, 0)
+shape = SubResource("shape_gutter_left")
+
+[node name="RightGutter" type="MeshInstance3D" parent="Lane"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.605, 0.025, 0)
+mesh = SubResource("mesh_gutter_right")
+material_override = SubResource("mat_gutter")
+
+[node name="RightGutterCol" type="CollisionShape3D" parent="Lane"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.605, 0.025, 0)
+shape = SubResource("shape_gutter_right")
+
+[node name="FoulLine" type="MeshInstance3D" parent="Lane"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.065, -7.0)
+mesh = SubResource("mesh_foul_line")
+material_override = SubResource("mat_foul")
+
+[node name="BackWall" type="StaticBody3D" parent="Lane"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 9.5)
+
+[node name="BackWallMesh" type="MeshInstance3D" parent="Lane/BackWall"]
+mesh = SubResource("mesh_back_wall")
+material_override = SubResource("mat_wall")
+
+[node name="BackWallCol" type="CollisionShape3D" parent="Lane/BackWall"]
+shape = SubResource("shape_back_wall")
+
+[node name="BowlingBall" type="RigidBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.11, -8)
+mass = 6.0
+script = ExtResource("4_ball")
+
+[node name="BallMesh" type="MeshInstance3D" parent="BowlingBall"]
+mesh = SubResource("mesh_ball")
+material_override = SubResource("mat_ball")
+
+[node name="BallCol" type="CollisionShape3D" parent="BowlingBall"]
+shape = SubResource("shape_ball")
+
+[node name="PinManager" type="Node3D" parent="."]
+script = ExtResource("5_pinmgr")
+
+[node name="HUD" type="CanvasLayer" parent="."]
+script = ExtResource("6_hud")
+
+[node name="ScoreLabel" type="Label" parent="HUD"]
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 400.0
+offset_bottom = 50.0
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+text = "Score: 0"
+
+[node name="FrameLabel" type="Label" parent="HUD"]
+offset_left = 16.0
+offset_top = 48.0
+offset_right = 400.0
+offset_bottom = 80.0
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
+text = "Frame: 1 / 10"
+
+[node name="RollLabel" type="Label" parent="HUD"]
+offset_left = 16.0
+offset_top = 78.0
+offset_right = 400.0
+offset_bottom = 110.0
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
+text = "Roll: 1"
+
+[node name="PromptLabel" type="Label" parent="HUD"]
+offset_left = 0.0
+offset_top = 660.0
+offset_right = 1280.0
+offset_bottom = 700.0
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(1, 0.95, 0.5, 1)
+text = "Aim with ← →,  hold SPACE to charge"
+horizontal_alignment = 1
+
+[node name="PowerMeter" type="ProgressBar" parent="HUD"]
+offset_left = 440.0
+offset_top = 650.0
+offset_right = 840.0
+offset_bottom = 690.0
+script = ExtResource("7_power")
+
+[node name="BallReturnTimer" type="Timer" parent="."]
+wait_time = 3.5
+one_shot = true
